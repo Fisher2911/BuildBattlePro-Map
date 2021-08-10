@@ -1,8 +1,18 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
 plugins {
     id 'java'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
+
+group 'net.choco.buildbattle'
+version '1.5'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 repositories {
     mavenLocal()
@@ -23,20 +33,28 @@ dependencies {
     compileOnly fileTree(dir: 'lib', include: ['*.jar'])
 }
 
+shadowJar {
+    relocate 'me.mattstudios.mf', 'net.choco.buildbattlepro.mf'
+}
 
-group = 'BuildBattlePro-Map'
-version = '1.4-SNAPSHOT'
-description = 'BuildBattlePro Map'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+task moveJar() {
+    doLast {
+        File original = new File(buildDir, "libs" + File.separator + "BuildBattlePro-Map-${rootProject.version}.jar")
+        File newLoc = new File(rootProject.buildDir, "libs" + File.separator + "BuildBattlePro-Map-${rootProject.version}.jar")
+        newLoc.createNewFile()
+        Files.move(original.toPath(), newLoc.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
+tasks.shadowJar.finalizedBy(moveJar)
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-shadowJar {
-    relocate 'me.mattstudios.mf', 'net.choco.buildbattlepro.mf'
-}
-
-test {
-    useJUnitPlatform()
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        include '**/*.yml'
+        filter(ReplaceTokens, tokens: [version: project.version])
+    }
 }

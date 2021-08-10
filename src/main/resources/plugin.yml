@@ -1,5 +1,5 @@
 name: BuildBattlePro-Map
 main: net.choco.buildbattlepro.Main
-version: 1.4
+version: @version@
 api-version: 1.13
 softdepend: [BuildBattlePro]
